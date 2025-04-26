@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI Agentic Framework Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .user {
+            background-color: #e9f5eb;
+            border-left: 4px solid #4CAF50;
+        }
+        .assistant {
+            background-color: #f0f8ff;
+            border-left: 4px solid #007bff;
+            white-space: pre-wrap;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.reset {
+            background-color: #f44336;
+        }
+        button.reset:hover {
+            background-color: #d32f2f;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+            color: #555;
+        }
+        .agent-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .agent-card {
+            flex: 1;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-top: 4px solid #4CAF50;
+        }
+        .agent-card h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .agent-flow {
+            margin-top: 15px;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+        .agent-flow h4 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            border-left: 4px solid #888;
+            padding-left: 15px;
+            background-color: rgba(240, 240, 240, 0.5);
+            border-radius: 4px;
+        }
+        .flow-agent {
+            font-weight: bold;
+            padding: 5px;
+            background-color: #888;
+            color: white;
+            border-radius: 4px 4px 0 0;
+        }
+        .flow-step:nth-child(1) .flow-agent {
+            background-color: #4CAF50;
+        }
+        .flow-step:nth-child(2) .flow-agent {
+            background-color: #2196F3;
+        }
+        .flow-step:nth-child(3) .flow-agent {
+            background-color: #FF9800;
+        }
+        .flow-content {
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Travel Planning with OpenAI Agentic Framework</h1>
+        
+        <div class="agent-info">
+            <div class="agent-card">
+                <h3>Triage Agent</h3>
+                <p>Coordinates the planning process and routes queries to specialist agents.</p>
+            </div>
+            <div class="agent-card">
+                <h3>Research Agent</h3>
+                <p>Provides comprehensive information about travel destinations.</p>
+            </div>
+            <div class="agent-card">
+                <h3>Planning Agent</h3>
+                <p>Creates detailed, personalized travel itineraries.</p>
+            </div>
+            <div class="agent-card">
+                <h3>Thinking Agent</h3>
+                <p>Makes the decision-making process transparent by explaining reasoning.</p>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            {% for message in conversation %}
+                {% if message.role == 'user' %}
+                    <div class="message {{ message.role }}">
+                        <strong>{{ message.role|title }}:</strong>
+                        <pre>{{ message.content }}</pre>
+                    </div>
+                {% else %}
+                    <div class="message assistant">
+                        <strong>Assistant:</strong>
+                        <pre>{{ message.content }}</pre>
+                        
+                        {% if message.flow %}
+                            <div class="agent-flow">
+                                <h4>Agent Flow Details:</h4>
+                                <div class="flow-container">
+                                    {% for step in message.flow %}
+                                        <div class="flow-step">
+                                            <div class="flow-agent">{{ step.agent }}</div>
+                                            <div class="flow-content">{{ step.response }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Ask about travel plans...">
+            <button id="sendBtn">Send</button>
+            <button id="resetBtn" class="reset">Reset</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <p>Thinking...</p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInput = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const chatContainer = document.getElementById('chatContainer');
+            const loading = document.getElementById('loading');
+            
+            // Function to add a message to the chat
+            function addMessage(role, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                
+                const roleStrong = document.createElement('strong');
+                roleStrong.textContent = role.charAt(0).toUpperCase() + role.slice(1) + ':';
+                
+                const contentPre = document.createElement('pre');
+                contentPre.textContent = content;
+                
+                messageDiv.appendChild(roleStrong);
+                messageDiv.appendChild(contentPre);
+                
+                chatContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            // Function to send message to server
+            async function sendMessage(query) {
+                try {
+                    // Show loading indicator
+                    loading.style.display = 'block';
+                    
+                    const response = await fetch('/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query }),
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Clear the chat container
+                    chatContainer.innerHTML = '';
+                    
+                    // Add all messages from the conversation history
+                    data.conversation.forEach(msg => {
+                        addMessage(msg.role, msg.content);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage('system', 'Error: Could not get a response. Please try again.');
+                } finally {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+                }
+            }
+            
+            // Function to reset conversation
+            async function resetConversation() {
+                try {
+                    const response = await fetch('/reset', {
+                        method: 'POST',
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    // Clear the chat container
+                    chatContainer.innerHTML = '';
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage('system', 'Error: Could not reset conversation. Please try again.');
+                }
+            }
+            
+            // Event listener for send button
+            sendBtn.addEventListener('click', function() {
+                const query = userInput.value.trim();
+                if (query) {
+                    sendMessage(query);
+                    userInput.value = '';
+                }
+            });
+            
+            // Event listener for enter key
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = userInput.value.trim();
+                    if (query) {
+                        sendMessage(query);
+                        userInput.value = '';
+                    }
+                }
+            });
+            
+            // Event listener for reset button
+            resetBtn.addEventListener('click', function() {
+                resetConversation();
+            });
+            
+            // Example queries
+            const exampleQueries = [
+                "I'm thinking about visiting Tokyo for a week in April. What should I know?",
+                "Can you create a 3-day itinerary for San Francisco on a budget?",
+                "I'm trying to decide between Bali and Thailand for a 2-week trip. Can you explain how you'd think through this decision?"
+            ];
+            
+            // Add a note about example queries
+            const exampleNote = document.createElement('div');
+            exampleNote.className = 'message system';
+            exampleNote.innerHTML = `<strong>Suggestions:</strong><p>Try asking:</p><ul>${exampleQueries.map(q => `<li><a href="#" class="example-query">${q}</a></li>`).join('')}</ul>`;
+            chatContainer.appendChild(exampleNote);
+            
+            // Add event listeners to example queries
+            document.querySelectorAll('.example-query').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    userInput.value = this.textContent;
+                    sendBtn.click();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
